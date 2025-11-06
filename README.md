@@ -72,7 +72,7 @@ The best parameter combination for the model is found by grid search, scoring by
 
 ## 6. Feature Importance Plot
 
-![Feature Importance Curve](Results/Feature_importance.png)
+![Feature Importance Curve](Results/feature_importance.png)
 ---
 
 ## 7. Statistical Summary
