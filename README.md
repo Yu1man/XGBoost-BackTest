@@ -17,7 +17,7 @@ The goal was to find out the optimzed parameter for indicators and the model, an
 | **Stock Code** | AAPL, NVDA, TSLA, SPY| 
 | **Time Period** | *2015-01-01 to 2024-12-31* |
 | **Initial Cash** | 100,000 |
-| **Commission** | 0.001% per trade |
+| **Commission** | 2$ per trade |
 | **Position Size** | 30% of the portfolio per trade   |
 | **Parameters Tested** | Fast MACD: [8, 12], Slow MACD: [20, 26], RSI: [10, 14, 20], SMA: [10, 20, 30]|
 | **Metrics Used** | Portfolio Value, Sharpe Ratio, Max Drawdown |
@@ -46,81 +46,62 @@ The results are then put in the Back Trader framework for back test
 ## 4. Results Summary
 
 ### 4.1 Back Test Plot
-![Back Test Plot](Results/BackTest.png)
+![Back Test Plot](Results/Figure_0.png)
 
-### 4.2 Best Parameter Combination
+### 4.2 Best Indicator Parameter Combination
 
-| Fast | Slow | Total Return | Sharpe | Sortino | Volatility | Winrate |
-|------|------|---------------|--------|----------|-------------|----------|
-| 10   | 10   | 2.1 %         | 0.961  | 1.007    | 0.011       | 41.7%    |
-
-**Best Strategy:** Fast = `15`, Slow = `20`, Sharpe = `0.961`
+| MACD Fast | MACD Slow | RSI  | SMA | Sharpe   |
+|-----------|-----------|------|-----|----------|
+| 10        | 10        | 8    | 20  | 1.02     |
 
 ---
 
-### 4.3 Performance Metrics Across All Combinations
+### 4.3 Best Model Parameter Combination
+The best parameter combination for the model is found by grid search, scoring by ROC AUC
+
+| colsample_bytree | Learning Rate | Max Depth  | N Estimators | Subsample |
+|------------------|---------------|------------|--------------|-----------|
+| 0.8              | 0.01          | 5          | 200          | 1.0       |
  
-![Heatmap of Sharpe Ratios](Results/Sharpe_Heatmap.png)
-
 ---
 
-## 5. Portfolio Performance
+## 5. Portfolio Value Plot
 
-### 5.1 Portfolio Value Over Time 
-![Portfolio Value Curve](Results/Portfolio_Change.png)
-
-**Observation:**  
-- The portfolio shows SMA may not stable enough to make profit in TSLA.  
-- Temporary drawdowns occur during sideways or volatile markets.  
-- Final capital: **$102,081** (+2.1% total return)
-
+![Portfolio Value Curve](Results/portfolio.png)
 ---
 
-##  6. Analysis and Visualizations
+## 6. Feature Importance Plot
 
-### 6.1 Return-Sharpe Relationship
-![Return Volatility Sharpe ](Results/Return_Sharpe.png)
-
-**Interpretation:**  
-- Sharpe ratio is highly correlated with return.
-- The highest win rate setup comes with median sharpe ratio
-
+![Feature Importance Curve](Results/Feature_importance.png)
 ---
 
 ## 7. Statistical Summary
 
 | Metric | Value | Description |
 |--------|--------|-------------|
-| **Average Daily Return** | 0.12% | Mean of daily portfolio returns |
-| **Annualized Volatility** | 18.2% | Standard deviation × √252 |
-| **Sharpe Ratio** | 1.72 | Risk-adjusted performance |
-| **Sortino Ratio** | 2.56 | Penalizes only downside risk |
-| **Max Drawdown** | 9.4% | Largest peak-to-trough loss |
-| **Winrate** | 41% | Percentage of profitable trades |
+| **Final Portfolio Value** | 215,803.713$ | Portfolio value when back test end |
+| **Profit Percentage** | 115.80% | Percentage earned in the back test |
+| **Sharpe Ratio** | 0.84 | Risk-adjusted performance |
+| **Max Drawdown** | 27.23% | Largest peak-to-trough loss |
+| **Winrate** | 56.77% | Percentage of profitable trades |
 
 ---
 
 ##  8. Discussion & Insights
 
-- The SMA crossover strategy performs best with moderate time windows (Fast 10, Slow 30).  
-- Overly short windows increase noise and transaction costs.  
-- Sharpe ratio correlates negatively with volatility at extremes.  
-- Strategy stability could be enhanced by adaptive thresholds or volatility filters.
+- The trained XGBoost model shows good performance on predicting unseen data
 
 ---
 
 ## 9. Future Improvements
 
 - Add **Stop Loss / Take Profit** levels for better drawdown control  
-- Implement **Walk-forward testing** for out-of-sample validation  
-- Compare SMA with **EMA, RSI, or MACD** crossover strategies  
-- Incorporate **machine learning** for adaptive parameter tuning  
-- Use **multiple assets** for portfolio-level optimization  
+- Set more condition on selling to lower the frequency of trading
+- Try more indicator combinations
+- Do weight combination search
 
 ---
 
 ## 10. Conclusion
 
-This study demonstrates the effectiveness of Backtrader for rapid strategy prototyping and parameter optimization.  
-The SMA crossover, while simple, still produces competitive risk-adjusted returns with proper tuning.  
-Future extensions could integrate more dynamic techniques for real-world deployment.
+This study demonstrates the train XGBoost model is capable to make profit in unseen stock market. Paper trade simulation will add once the model has been optimized.
