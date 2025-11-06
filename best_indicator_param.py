@@ -3,6 +3,8 @@ import numpy as np
 import ta
 import itertools
 import os
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # === 設定 ===
 TICKERS = ['AAPL', 'NVDA', 'TSLA', 'SPY']
@@ -11,13 +13,11 @@ sma_periods = [10, 20, 30]
 macd_fast = [8, 12]
 macd_slow = [20, 26]
 
-# 儲存結果
 results = []
 
-# === 參數組合遍歷 ===
 for rsi_p, sma_p, macd_f, macd_s in itertools.product(rsi_periods, sma_periods, macd_fast, macd_slow):
 
-    sharpes = []  # 儲存每個股票的 Sharpe Ratio
+    sharpes = []  # Save sharpe ratio
 
     for ticker in TICKERS:
         df = pd.read_csv(f'./Data/{ticker}.csv')
@@ -27,26 +27,26 @@ for rsi_p, sma_p, macd_f, macd_s in itertools.product(rsi_periods, sma_periods, 
         df.set_index('Date', inplace=True)
         df.rename(columns=str.lower, inplace=True)
 
-        # === 動態套用參數 ===
+        # Indicator
         df['rsi'] = ta.momentum.RSIIndicator(df['close'], window=rsi_p).rsi()
         df['sma'] = ta.trend.SMAIndicator(df['close'], window=sma_p).sma_indicator()
         macd = ta.trend.MACD(df['close'], window_fast=macd_f, window_slow=macd_s)
         df['macd'] = macd.macd()
 
-        # === 產生策略信號 (範例: RSI > 50 看多) ===
+        # Create signal
         df['signal'] = (df['rsi'] > 50).astype(int)
 
-        # === 計算報酬 ===
+        # Calculate Returns
         df['return'] = df['close'].pct_change()
         df['strategy'] = df['signal'].shift(1) * df['return']
         df.dropna(inplace=True)
 
-        # === 計算 Sharpe Ratio ===
+        # Sharpe Ratio
         if df['strategy'].std() > 0:
             sharpe = (df['strategy'].mean() / df['strategy'].std()) * np.sqrt(252)
             sharpes.append(sharpe)
 
-    # === 平均 Sharpe across stocks ===
+    # Average Sharpe 
     if sharpes:
         avg_sharpe = np.mean(sharpes)
         results.append({
@@ -58,11 +58,11 @@ for rsi_p, sma_p, macd_f, macd_s in itertools.product(rsi_periods, sma_periods, 
         })
         print(f"RSI={rsi_p}, SMA={sma_p}, MACD({macd_f},{macd_s}) → Sharpe={avg_sharpe:.3f}")
 
-# === 匯出結果 ===
+# Result
 results_df = pd.DataFrame(results)
 results_df = results_df.sort_values(by='avg_sharpe', ascending=False)
 os.makedirs('./Optimization Results', exist_ok=True)
 results_df.to_csv('./Optimization Results/best_indicators.csv', index=False)
 
-print("\n🏆 Top 5 Best Indicator Sets:")
+print("\nTop 5 Best Indicator Sets:")
 print(results_df.head(5))

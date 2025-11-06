@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import joblib
 from sklearn.model_selection import GridSearchCV
 import xgboost as xgb
+import seaborn as sns
 
 df = pd.read_csv('./Prepared Data/multi_stock_features.csv')
 
@@ -34,7 +35,7 @@ grid_search = GridSearchCV(
     estimator=model,
     param_grid=param_grid,
     cv=3,                   
-    scoring='accuracy',  
+    scoring='roc_auc',  
     verbose=2,
     n_jobs=-1
 )
@@ -46,7 +47,24 @@ print("Best accuracy:", grid_search.best_score_)
 
 best_model = grid_search.best_estimator_
 
-xgb.plot_importance(best_model, importance_type='gain', title='Feature Importance')
+importance = best_model.get_booster().get_score(importance_type='gain')
+importance_df = pd.DataFrame({
+    'Feature': list(importance.keys()),
+    'Importance': list(importance.values())
+}).sort_values(by='Importance', ascending=False)
+
+plt.figure(figsize=(8, 5))
+sns.barplot(
+    data=importance_df,
+    x='Importance',
+    y='Feature',
+    palette='viridis'
+)
+plt.title('Feature Importance (Gain)', fontsize=14, weight='bold')
+plt.xlabel('Importance Score', fontsize=12)
+plt.ylabel('Features', fontsize=12)
+plt.grid(axis='x', linestyle='--', alpha=0.6)
+plt.tight_layout()
 plt.show()
 
 joblib.dump(best_model, 'models/xgb_model.pkl')
